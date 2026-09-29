@@ -1,30 +1,32 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Galería Fotos ELOHIM</title>
+  <title>Galería Ultra-Futurista ELOHIM AI</title>
 
-  <!-- Google Fonts & Lucide Icons -->
+  <!-- Fuentes Pro & Lucide Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- JSZip para descargar grupos de fotos en un archivo .zip -->
+  <!-- JSZip para descargar grupos de fotos -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <style>
     :root {
       --primary: #38bdf8;
-      --primary-glow: rgba(56, 189, 248, 0.35);
-      --accent: #818cf8;
-      --bg-dark: #090d16;
-      --card-bg: rgba(30, 41, 59, 0.65);
-      --card-border: rgba(255, 255, 255, 0.1);
+      --primary-glow: rgba(56, 189, 248, 0.4);
+      --accent: #a855f7;
+      --accent-glow: rgba(168, 85, 247, 0.4);
+      --bg-dark: #030712;
+      --card-bg: rgba(15, 23, 42, 0.6);
+      --card-border: rgba(255, 255, 255, 0.08);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --glass-bg: rgba(15, 23, 42, 0.75);
-      --glass-border: rgba(255, 255, 255, 0.12);
-      --radius: 18px;
+      --glass-bg: rgba(15, 23, 42, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --radius: 20px;
     }
 
     * {
@@ -43,7 +45,7 @@
       position: relative;
     }
 
-    /* Canvas de fondo animado */
+    /* Canvas de fondo con partículas y aurora */
     #bgCanvas {
       position: fixed;
       top: 0;
@@ -54,24 +56,24 @@
       pointer-events: none;
     }
 
-    /* Fondo degradado ambiental */
     .ambient-glow {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 80vw;
-      height: 80vh;
-      background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.08) 40%, transparent 70%);
+      width: 90vw;
+      height: 90vh;
+      background: radial-gradient(circle, var(--primary-glow) 0%, var(--accent-glow) 40%, transparent 70%);
       z-index: -1;
       pointer-events: none;
-      filter: blur(60px);
-      transition: all 0.8s ease;
+      filter: blur(100px);
+      transition: all 1s ease;
+      opacity: 0.6;
     }
 
     /* Encabezado */
     header {
-      padding: 2rem 1.5rem 1rem;
+      padding: 2.5rem 1.5rem 1rem;
       max-width: 1400px;
       margin: 0 auto;
       display: flex;
@@ -84,59 +86,62 @@
     .brand-pill {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       background: rgba(56, 189, 248, 0.1);
       border: 1px solid rgba(56, 189, 248, 0.3);
-      padding: 6px 16px;
-      border-radius: 30px;
+      padding: 8px 20px;
+      border-radius: 40px;
       font-size: 0.85rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--primary);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 0.75rem;
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 30px var(--primary-glow);
+      backdrop-filter: blur(10px);
     }
 
     h1 {
-      font-size: 2.8rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffffff 0%, #38bdf8 50%, #a855f7 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-align: center;
       letter-spacing: -1px;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    /* Barra de herramientas flotante */
+    /* Toolbar Flotante Pro */
     .toolbar-wrapper {
       position: sticky;
       top: 20px;
       z-index: 100;
-      max-width: 1200px;
+      max-width: 1300px;
       margin: 1.5rem auto 2.5rem;
       padding: 0 1rem;
     }
 
     .toolbar {
       background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
       border: 1px solid var(--glass-border);
-      border-radius: 24px;
-      padding: 0.8rem 1.2rem;
+      border-radius: 28px;
+      padding: 0.8rem 1.4rem;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
     }
 
     .tool-group {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
     }
 
     .folder-input-wrapper {
@@ -144,71 +149,77 @@
       align-items: center;
       background: rgba(255,255,255,0.05);
       border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 4px 8px 4px 12px;
-      gap: 6px;
+      border-radius: 16px;
+      padding: 4px 8px 4px 14px;
+      gap: 8px;
+      transition: border 0.3s ease;
+    }
+
+    .folder-input-wrapper:focus-within {
+      border-color: var(--primary);
     }
 
     .folder-input-wrapper input {
       background: transparent;
       border: none;
       color: #fff;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       outline: none;
-      width: 110px;
+      width: 120px;
       font-weight: 600;
     }
 
     .btn-icon {
-      background: rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.05);
       border: 1px solid var(--card-border);
       color: var(--text-main);
-      padding: 8px 14px;
-      border-radius: 12px;
+      padding: 10px 16px;
+      border-radius: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 0.85rem;
       font-weight: 600;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .btn-icon:hover {
-      background: rgba(56, 189, 248, 0.2);
+      background: rgba(56, 189, 248, 0.15);
       border-color: var(--primary);
       color: var(--primary);
       transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(56, 189, 248, 0.2);
     }
 
     .btn-icon.active {
       background: var(--primary);
-      color: #090d16;
+      color: #030712;
       border-color: var(--primary);
-      box-shadow: 0 0 15px var(--primary-glow);
+      box-shadow: 0 0 20px var(--primary-glow);
     }
 
     .btn-primary-action {
       background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-      color: #090d16;
+      color: #030712;
       font-weight: 700;
       border: none;
-      padding: 10px 18px;
-      border-radius: 14px;
+      padding: 10px 20px;
+      border-radius: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 15px var(--primary-glow);
+      box-shadow: 0 5px 20px var(--primary-glow);
       transition: all 0.3s ease;
     }
 
     .btn-primary-action:hover {
-      transform: scale(1.03);
-      box-shadow: 0 6px 20px var(--primary-glow);
+      transform: scale(1.04);
+      box-shadow: 0 8px 25px var(--accent-glow);
     }
 
-    /* Avatar Interactivo de ELOHIM Bot */
+    /* AVATAR INTERACTIVO 3D AVANZADO */
     .avatar-widget {
       position: fixed;
       bottom: 25px;
@@ -217,70 +228,109 @@
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 10px;
+      gap: 12px;
     }
 
     .avatar-speech {
       background: var(--glass-bg);
-      backdrop-filter: blur(16px);
+      backdrop-filter: blur(20px);
       border: 1px solid var(--primary);
-      padding: 12px 18px;
-      border-radius: 18px 18px 4px 18px;
-      font-size: 0.85rem;
-      max-width: 240px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      padding: 14px 20px;
+      border-radius: 20px 20px 4px 20px;
+      font-size: 0.9rem;
+      max-width: 280px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
       display: none;
       animation: fadeIn 0.3s ease;
+      line-height: 1.4;
     }
 
     .avatar-btn {
-      width: 65px;
-      height: 65px;
+      width: 75px;
+      height: 75px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #1e293b, #0f172a);
+      background: linear-gradient(135deg, #0f172a, #030712);
       border: 2px solid var(--primary);
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 0 25px var(--primary-glow);
+      box-shadow: 0 0 30px var(--primary-glow);
       position: relative;
-      transition: transform 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .avatar-btn:hover {
       transform: scale(1.1) rotate(5deg);
+      border-color: var(--accent);
+      box-shadow: 0 0 35px var(--accent-glow);
     }
 
+    /* Traje y Modelo Dinámico del Avatar */
     .avatar-core {
-      width: 42px;
-      height: 42px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
-      background: radial-gradient(circle, var(--primary) 0%, var(--accent) 70%);
+      background: radial-gradient(circle, var(--primary) 0%, var(--accent) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: pulse 2s infinite alternate;
+      animation: pulse 2.5s infinite alternate;
+      transition: all 0.5s ease;
     }
 
-    /* Grid de Galería */
+    .avatar-model-cyberpunk {
+      background: radial-gradient(circle, #f43f5e 0%, #a855f7 100%) !important;
+    }
+
+    .avatar-model-gold {
+      background: radial-gradient(circle, #eab308 0%, #f97316 100%) !important;
+    }
+
+    /* Galería y Modos de Presentación */
     .gallery-container {
       max-width: 1400px;
       margin: 0 auto;
       padding: 0 1.5rem 4rem;
     }
 
-    .gallery-grid {
+    /* Modo 1: Grid Grid Moderno */
+    .layout-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
+      gap: 1.8rem;
     }
 
-    /* Estilo de Tarjetas */
+    /* Modo 2: Mosaico Creativo (Masonry Style) */
+    .layout-masonry {
+      display: columns;
+      column-width: 300px;
+      column-gap: 1.8rem;
+    }
+    .layout-masonry .gallery-card {
+      margin-bottom: 1.8rem;
+      break-inside: avoid;
+      aspect-ratio: auto;
+    }
+
+    /* Modo 3: Carrusel 3D / Stream */
+    .layout-carousel {
+      display: flex;
+      overflow-x: auto;
+      gap: 2rem;
+      padding: 2rem 1rem;
+      scroll-snap-type: x mandatory;
+    }
+    .layout-carousel .gallery-card {
+      min-width: 320px;
+      scroll-snap-align: center;
+    }
+
+    /* Estilo de Tarjetas con Vidrio y Luces */
     .gallery-card {
       position: relative;
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--card-border);
       border-radius: var(--radius);
       overflow: hidden;
@@ -290,9 +340,9 @@
     }
 
     .gallery-card:hover {
-      transform: translateY(-8px) scale(1.01);
+      transform: translateY(-10px) scale(1.02);
       border-color: var(--primary);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px var(--primary-glow);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px var(--primary-glow);
     }
 
     .gallery-card img {
@@ -306,16 +356,16 @@
       transform: scale(1.08);
     }
 
-    /* Checkbox para Selección Múltiple */
+    /* Checkbox de Selección Múltiple */
     .select-checkbox {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
-      background: rgba(15, 23, 42, 0.7);
-      border: 2px solid rgba(255, 255, 255, 0.5);
+      top: 14px;
+      left: 14px;
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 2px solid rgba(255, 255, 255, 0.4);
       z-index: 5;
       display: flex;
       align-items: center;
@@ -326,17 +376,17 @@
     .gallery-card.selected .select-checkbox {
       background: var(--primary);
       border-color: var(--primary);
-      color: #090d16;
+      color: #030712;
     }
 
-    /* Capa flotante con botón de descarga directo */
+    /* Capa flotante con acciones directas */
     .card-actions {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 1rem;
-      background: linear-gradient(to top, rgba(9, 13, 22, 0.85) 0%, transparent 100%);
+      padding: 1.2rem;
+      background: linear-gradient(to top, rgba(3, 7, 18, 0.9) 0%, transparent 100%);
       opacity: 0;
       transform: translateY(10px);
       transition: all 0.3s ease;
@@ -351,11 +401,11 @@
 
     .btn-quick-download {
       background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.4);
       color: #fff;
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -366,19 +416,19 @@
 
     .btn-quick-download:hover {
       background: var(--primary);
-      color: #090d16;
+      color: #030712;
       border-color: var(--primary);
-      transform: scale(1.1);
+      transform: scale(1.15);
     }
 
-    /* Modal Visor (Lightbox Pro) */
+    /* Modal Visor Pro */
     .modal {
       display: none;
       position: fixed;
       inset: 0;
       z-index: 1000;
-      background: rgba(5, 8, 15, 0.95);
-      backdrop-filter: blur(25px);
+      background: rgba(3, 7, 18, 0.95);
+      backdrop-filter: blur(30px);
       justify-content: center;
       align-items: center;
       opacity: 0;
@@ -403,18 +453,17 @@
       max-width: 90vw;
       max-height: 82vh;
       object-fit: contain;
-      border-radius: 12px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+      border-radius: 16px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.9);
       transition: transform 0.2s ease;
     }
 
-    /* Controles flotantes dentro del modal */
     .modal-controls {
       position: absolute;
-      top: 20px;
-      right: 20px;
+      top: 25px;
+      right: 25px;
       display: flex;
-      gap: 10px;
+      gap: 12px;
       z-index: 1010;
     }
 
@@ -424,11 +473,11 @@
       display: flex;
       align-items: center;
       gap: 15px;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--card-border);
-      padding: 10px 20px;
-      border-radius: 30px;
+      padding: 10px 24px;
+      border-radius: 40px;
       z-index: 1010;
     }
 
@@ -439,8 +488,8 @@
       background: rgba(255,255,255,0.08);
       border: 1px solid var(--card-border);
       color: #fff;
-      width: 50px;
-      height: 50px;
+      width: 55px;
+      height: 55px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -452,16 +501,17 @@
 
     .nav-arrow:hover {
       background: var(--primary);
-      color: #090d16;
+      color: #030712;
+      transform: translateY(-50%) scale(1.1);
     }
 
     .nav-prev { left: 25px; }
     .nav-next { right: 25px; }
 
-    /* Animaciones */
+    /* Animaciones Generales */
     @keyframes pulse {
       0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.6); }
-      100% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); }
+      100% { box-shadow: 0 0 0 20px rgba(56, 189, 248, 0); }
     }
 
     @keyframes fadeIn {
@@ -477,13 +527,13 @@
     }
 
     .spinner {
-      width: 40px;
-      height: 40px;
+      width: 45px;
+      height: 45px;
       border: 3px solid rgba(56, 189, 248, 0.1);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
+      margin: 0 auto 1.5rem;
     }
 
     @keyframes spin {
@@ -493,51 +543,64 @@
 </head>
 <body>
 
-  <!-- Fondo interactivo con partículas -->
+  <!-- Fondo interactivo con Canvas -->
   <canvas id="bgCanvas"></canvas>
   <div class="ambient-glow" id="ambientGlow"></div>
 
   <!-- Encabezado -->
   <header>
     <div class="brand-pill">
-      <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
-      Centro Galería ELOHIM
+      <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+      Centro Galería ELOHIM AI
     </div>
-    <h1>Galería de Fotos</h1>
+    <h1>Galería de Fotos Ultra-Futurista</h1>
   </header>
 
-  <!-- Barra de Herramientas Flotante -->
+  <!-- Toolbar Flotante Pro -->
   <div class="toolbar-wrapper">
     <div class="toolbar">
-      <!-- Selector de carpeta -->
+      <!-- Selector de Carpeta -->
       <div class="tool-group">
         <div class="folder-input-wrapper">
-          <i data-lucide="folder" style="width: 16px; height: 16px; color: var(--primary);"></i>
+          <i data-lucide="folder" style="width: 18px; height: 18px; color: var(--primary);"></i>
           <input type="text" id="folderInput" value="29092026">
           <button class="btn-icon" onclick="cargarGaleria()" title="Cargar carpeta">
-            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+            <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
           </button>
         </div>
       </div>
 
-      <!-- Modos de Fondo Ambiental -->
+      <!-- Cambiador de Diseños de Presentación -->
+      <div class="tool-group">
+        <button class="btn-icon active" id="btnLayoutGrid" onclick="cambiarLayout('grid')" title="Vista Grid">
+          <i data-lucide="grid" style="width: 16px; height: 16px;"></i>
+        </button>
+        <button class="btn-icon" id="btnLayoutMasonry" onclick="cambiarLayout('masonry')" title="Vista Mosaico">
+          <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>
+        </button>
+        <button class="btn-icon" id="btnLayoutCarousel" onclick="cambiarLayout('carousel')" title="Vista Carrusel Stream">
+          <i data-lucide="layers" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+
+      <!-- Fondos Ambientales -->
       <div class="tool-group">
         <button class="btn-icon" onclick="cambiarFondo('cosmic')" title="Fondo Cósmico">
           <i data-lucide="moon" style="width: 16px; height: 16px;"></i>
         </button>
-        <button class="btn-icon" onclick="cambiarFondo('neon')" title="Fondo Neón">
+        <button class="btn-icon" onclick="cambiarFondo('neon')" title="Fondo Neón Cyberpunk">
           <i data-lucide="zap" style="width: 16px; height: 16px;"></i>
         </button>
-        <button class="btn-icon" onclick="cambiarFondo('sunset')" title="Fondo Sunset">
+        <button class="btn-icon" onclick="cambiarFondo('sunset')" title="Fondo Sunset Gold">
           <i data-lucide="sun" style="width: 16px; height: 16px;"></i>
         </button>
       </div>
 
-      <!-- Descarga Masiva -->
+      <!-- Descarga Masiva ZIP -->
       <div class="tool-group">
         <button class="btn-primary-action" id="downloadSelectedBtn" onclick="descargarSeleccionadasZip()" style="display: none;">
           <i data-lucide="download-cloud" style="width: 18px; height: 18px;"></i>
-          Descargar ZIP (<span id="selectedCount">0</span>)
+          ZIP (<span id="selectedCount">0</span>)
         </button>
       </div>
     </div>
@@ -545,7 +608,7 @@
 
   <!-- Galería Principal -->
   <main class="gallery-container">
-    <div class="gallery-grid" id="galleryContainer">
+    <div class="layout-grid" id="galleryContainer">
       <div class="status-container">
         <div class="spinner"></div>
         <p>Cargando fotografías desde GitHub...</p>
@@ -553,10 +616,10 @@
     </div>
   </main>
 
-  <!-- Visor Modal Pro (Lightbox) -->
+  <!-- Modal Lightbox Pro -->
   <div class="modal" id="imageModal">
     <div class="modal-controls">
-      <button class="btn-icon" onclick="rotarImagen()" title="Rotar">
+      <button class="btn-icon" onclick="rotarImagen()" title="Rotar Imagen">
         <i data-lucide="rotate-cw"></i>
       </button>
       <button class="btn-icon" onclick="descargarImagenActual()" title="Descargar foto">
@@ -580,18 +643,18 @@
     </button>
 
     <div class="modal-bottom-bar">
-      <span id="modalIndexText" style="font-size: 0.85rem; font-weight: 600;">1 de 10</span>
+      <span id="modalIndexText" style="font-size: 0.9rem; font-weight: 600;">1 de 10</span>
     </div>
   </div>
 
-  <!-- Avatar Interactivo ELOHIM Bot -->
+  <!-- Avatar Interactivo con Modelos Cambiantes -->
   <div class="avatar-widget">
     <div class="avatar-speech" id="avatarSpeech">
-      ¡Hola! Puedes seleccionar varias fotos para descargarlas juntas en un archivo ZIP.
+      ¡Hola! Soy ELOHIM AI. ¡Haz clic en mí para cambiar mi modelo de avatar o cambiar el estilo de presentación de las fotos!
     </div>
     <div class="avatar-btn" onclick="interactuarAvatar()">
-      <div class="avatar-core">
-        <i data-lucide="bot" style="color: #090d16; width: 22px; height: 22px;"></i>
+      <div class="avatar-core" id="avatarCore">
+        <i data-lucide="bot" style="color: #030712; width: 26px; height: 26px;"></i>
       </div>
     </div>
   </div>
@@ -608,6 +671,8 @@
     let seleccionados = new Set();
     let indexFotoActual = 0;
     let anguloRotacion = 0;
+    let avatarModeloIdx = 0;
+    let layoutActual = 'grid';
 
     // Inicialización al cargar la página
     document.addEventListener('DOMContentLoaded', () => {
@@ -616,7 +681,7 @@
       cargarGaleria();
     });
 
-    // 1. Carga de fotografías desde la API de GitHub
+    // 1. Carga de fotos desde la API de GitHub
     async function cargarGaleria() {
       const folderName = document.getElementById('folderInput').value.trim() || config.carpeta;
       config.carpeta = folderName;
@@ -655,7 +720,7 @@
         }
 
         renderizarGaleria();
-        hablarAvatar(`Se cargaron ${listaFotos.length} fotos exitosamente.`);
+        hablarAvatar(`¡Listo! Se han cargado ${listaFotos.length} fotografías exitosamente.`);
 
       } catch (err) {
         container.innerHTML = `
@@ -668,7 +733,7 @@
       }
     }
 
-    // 2. Renderizado limpio sin nombres de texto
+    // 2. Renderizado flexible según el diseño
     function renderizarGaleria() {
       const container = document.getElementById('galleryContainer');
       container.innerHTML = '';
@@ -701,7 +766,29 @@
       lucide.createIcons();
     }
 
-    // 3. Gestión de Selección Múltiple
+    // 3. Modos de Presentación de Layouts
+    function cambiarLayout(modo) {
+      layoutActual = modo;
+      const container = document.getElementById('galleryContainer');
+      
+      document.querySelectorAll('#btnLayoutGrid, #btnLayoutMasonry, #btnLayoutCarousel').forEach(b => b.classList.remove('active'));
+      
+      if (modo === 'grid') {
+        container.className = 'layout-grid';
+        document.getElementById('btnLayoutGrid').classList.add('active');
+        hablarAvatar('Cambiado a vista de Cuadrícula Clásica.');
+      } else if (modo === 'masonry') {
+        container.className = 'layout-masonry';
+        document.getElementById('btnLayoutMasonry').classList.add('active');
+        hablarAvatar('Cambiado a vista de Mosaico Creativo.');
+      } else if (modo === 'carousel') {
+        container.className = 'layout-carousel';
+        document.getElementById('btnLayoutCarousel').classList.add('active');
+        hablarAvatar('Cambiado a vista Carrusel Stream en desplazamiento horizontal.');
+      }
+    }
+
+    // 4. Gestión de Selección Múltiple
     function toggleSeleccion(event, idx) {
       event.stopPropagation();
       if (seleccionados.has(idx)) {
@@ -725,16 +812,13 @@
       }
     }
 
-    // 4. Descarga en ZIP
+    // 5. Descarga en paquete ZIP
     async function descargarSeleccionadasZip() {
       if (seleccionados.size === 0) return;
 
-      hablarAvatar('Generando paquete ZIP...');
+      hablarAvatar('Comprimiendo fotos en un paquete ZIP...');
       const zip = new JSZip();
-      const folder = zip.folder("Fotos");
-
-      let procesados = 0;
-      const total = seleccionados.size;
+      const folder = zip.folder("Fotos_ELOHIM");
 
       for (let idx of seleccionados) {
         const foto = listaFotos[idx];
@@ -742,22 +826,21 @@
           const resp = await fetch(foto.download_url);
           const blob = await resp.blob();
           folder.file(foto.name, blob);
-          procesados++;
         } catch (e) {
-          console.error("Error al descargar foto para ZIP:", e);
+          console.error("Error al añadir foto al ZIP:", e);
         }
       }
 
       zip.generateAsync({ type: "blob" }).then((content) => {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(content);
-        a.download = `Galeria_${config.carpeta}_Fotos.zip`;
+        a.download = `Galeria_${config.carpeta}_ELOHIM.zip`;
         a.click();
-        hablarAvatar('¡Descarga iniciada con éxito!');
+        hablarAvatar('¡Descarga completada con éxito!');
       });
     }
 
-    // 5. Descarga de imagen individual
+    // 6. Descarga Individual de Imagen
     async function descargarFotoDirecta(event, url) {
       if (event) event.stopPropagation();
       try {
@@ -765,14 +848,14 @@
         const blob = await response.blob();
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'Fotografia.jpg';
+        a.download = 'Fotografia_ELOHIM.jpg';
         a.click();
       } catch (err) {
         window.open(url, '_blank');
       }
     }
 
-    // 6. Visor Modal Lightbox
+    // 7. Visor Lightbox Pro
     function abrirModal(idx) {
       indexFotoActual = idx;
       anguloRotacion = 0;
@@ -804,7 +887,7 @@
       descargarFotoDirecta(null, listaFotos[indexFotoActual].download_url);
     }
 
-    // Teclas de acceso rápido
+    // Accesos directos de teclado
     document.addEventListener('keydown', (e) => {
       const modal = document.getElementById('imageModal');
       if (!modal.classList.contains('active')) return;
@@ -813,19 +896,22 @@
       if (e.key === 'ArrowRight') cambiarFotoModal(1);
     });
 
-    // 7. Fondos dinámicos e interactivos
+    // 8. Cambiador de Fondos Neón Dinámicos
     function cambiarFondo(tema) {
       const glow = document.getElementById('ambientGlow');
       if (tema === 'cosmic') {
-        glow.style.background = 'radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(129, 140, 248, 0.08) 50%, transparent 70%)';
+        glow.style.background = 'radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(168, 85, 247, 0.2) 50%, transparent 70%)';
+        hablarAvatar('Fondo Cósmico activado.');
       } else if (tema === 'neon') {
-        glow.style.background = 'radial-gradient(circle, rgba(236, 72, 153, 0.18) 0%, rgba(139, 92, 246, 0.12) 50%, transparent 70%)';
+        glow.style.background = 'radial-gradient(circle, rgba(244, 63, 94, 0.35) 0%, rgba(168, 85, 247, 0.25) 50%, transparent 70%)';
+        hablarAvatar('Fondo Neón Cyberpunk activado.');
       } else if (tema === 'sunset') {
-        glow.style.background = 'radial-gradient(circle, rgba(249, 115, 22, 0.18) 0%, rgba(234, 179, 8, 0.1) 50%, transparent 70%)';
+        glow.style.background = 'radial-gradient(circle, rgba(249, 115, 22, 0.35) 0%, rgba(234, 179, 8, 0.2) 50%, transparent 70%)';
+        hablarAvatar('Fondo Sunset Gold activado.');
       }
     }
 
-    // 8. Sistema de Partículas para Fondo en Canvas
+    // 9. Motor de Partículas Interactivas en Canvas
     function initParticles() {
       const canvas = document.getElementById('bgCanvas');
       const ctx = canvas.getContext('2d');
@@ -838,13 +924,13 @@
         height = canvas.height = window.innerHeight;
       });
 
-      const particles = Array.from({ length: 45 }, () => ({
+      const particles = Array.from({ length: 60 }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        radius: Math.random() * 1.5 + 0.5,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        alpha: Math.random() * 0.5 + 0.2
+        radius: Math.random() * 2 + 0.5,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        alpha: Math.random() * 0.6 + 0.2
       }));
 
       function animate() {
@@ -871,7 +957,7 @@
       animate();
     }
 
-    // 9. Asistente Avatar ELOHIM
+    // 10. Avatar IA Interactivo con Trajes/Modelos Cambiantes
     function hablarAvatar(mensaje) {
       const speech = document.getElementById('avatarSpeech');
       speech.innerText = mensaje;
@@ -882,14 +968,19 @@
     }
 
     function interactuarAvatar() {
-      const frases = [
-        "Puedes cambiar de carpeta introduciendo su nombre en la barra superior.",
-        "Haz clic en el icono del check sobre cualquier foto para seleccionarla y bajar un paquete ZIP.",
-        "Abre cualquier imagen para verla en pantalla completa con opciones de rotación.",
-        "Usa las teclas de flecha en tu teclado para navegar entre las fotos dentro del visor."
-      ];
-      const azar = frases[Math.floor(Math.random() * frases.length)];
-      hablarAvatar(azar);
+      avatarModeloIdx = (avatarModeloIdx + 1) % 3;
+      const avatarCore = document.getElementById('avatarCore');
+
+      if (avatarModeloIdx === 0) {
+        avatarCore.className = 'avatar-core';
+        hablarAvatar("Modelo Clásico IA cargado. ¡Usa la barra superior para cambiar el diseño de presentación!");
+      } else if (avatarModeloIdx === 1) {
+        avatarCore.className = 'avatar-core avatar-model-cyberpunk';
+        hablarAvatar("¡Modelo Cyberpunk activado! Puedes seleccionar varias imágenes y bajarlas todas juntas en un ZIP.");
+      } else if (avatarModeloIdx === 2) {
+        avatarCore.className = 'avatar-core avatar-model-gold';
+        hablarAvatar("¡Modelo Gold Elite listo! Usa las flechas de tu teclado para moverte entre fotos dentro del visor.");
+      }
     }
   </script>
 </body>

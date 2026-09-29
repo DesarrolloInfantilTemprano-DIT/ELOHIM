@@ -2,217 +2,895 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ELOHIM</title>
+  <title>Galería Fotos ELOHIM</title>
+
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- JSZip para descargar grupos de fotos en un archivo .zip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <style>
     :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-color: #f8fafc;
-      --accent-color: #38bdf8;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.35);
+      --accent: #818cf8;
+      --bg-dark: #090d16;
+      --card-bg: rgba(30, 41, 59, 0.65);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --glass-bg: rgba(15, 23, 42, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --radius: 18px;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
     }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
       min-height: 100vh;
-      padding: 2rem 1rem;
+      overflow-x: hidden;
+      position: relative;
     }
 
+    /* Canvas de fondo animado */
+    #bgCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    /* Fondo degradado ambiental */
+    .ambient-glow {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80vw;
+      height: 80vh;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.08) 40%, transparent 70%);
+      z-index: -1;
+      pointer-events: none;
+      filter: blur(60px);
+      transition: all 0.8s ease;
+    }
+
+    /* Encabezado */
     header {
+      padding: 2rem 1.5rem 1rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       text-align: center;
-      margin-bottom: 2.5rem;
+      letter-spacing: -1px;
     }
 
-    header h1 {
-      font-size: 2.2rem;
-      color: var(--accent-color);
-      margin-bottom: 0.5rem;
+    /* Barra de herramientas flotante */
+    .toolbar-wrapper {
+      position: sticky;
+      top: 20px;
+      z-index: 100;
+      max-width: 1200px;
+      margin: 1.5rem auto 2.5rem;
+      padding: 0 1rem;
     }
 
-    header p {
-      color: #94a3b8;
-      font-size: 0.95rem;
+    .toolbar {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 0.8rem 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .folder-input-wrapper {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 4px 8px 4px 12px;
+      gap: 6px;
+    }
+
+    .folder-input-wrapper input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      width: 110px;
+      font-weight: 600;
+    }
+
+    .btn-icon {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-icon:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .btn-icon.active {
+      background: var(--primary);
+      color: #090d16;
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .btn-primary-action {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: #090d16;
+      font-weight: 700;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px var(--primary-glow);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary-action:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+
+    /* Avatar Interactivo de ELOHIM Bot */
+    .avatar-widget {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .avatar-speech {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--primary);
+      padding: 12px 18px;
+      border-radius: 18px 18px 4px 18px;
+      font-size: 0.85rem;
+      max-width: 240px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .avatar-btn {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 2px solid var(--primary);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 25px var(--primary-glow);
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+
+    .avatar-btn:hover {
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    .avatar-core {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--primary) 0%, var(--accent) 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite alternate;
     }
 
     /* Grid de Galería */
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1.25rem;
-      max-width: 1200px;
+    .gallery-container {
+      max-width: 1400px;
       margin: 0 auto;
+      padding: 0 1.5rem 4rem;
     }
 
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Estilo de Tarjetas */
     .gallery-card {
-      background-color: var(--card-bg);
-      border-radius: 12px;
+      position: relative;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
       overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
       cursor: pointer;
       aspect-ratio: 4 / 3;
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
 
     .gallery-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.25);
+      transform: translateY(-8px) scale(1.01);
+      border-color: var(--primary);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px var(--primary-glow);
     }
 
     .gallery-card img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
+      transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
 
-    /* Mensaje de carga o sin fotos */
-    .status-msg {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 3rem;
-      color: #94a3b8;
-      font-size: 1.1rem;
+    .gallery-card:hover img {
+      transform: scale(1.08);
     }
 
-    /* Modal / Lightbox */
+    /* Checkbox para Selección Múltiple */
+    .select-checkbox {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .gallery-card.selected .select-checkbox {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #090d16;
+    }
+
+    /* Capa flotante con botón de descarga directo */
+    .card-actions {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem;
+      background: linear-gradient(to top, rgba(9, 13, 22, 0.85) 0%, transparent 100%);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .gallery-card:hover .card-actions {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .btn-quick-download {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-quick-download:hover {
+      background: var(--primary);
+      color: #090d16;
+      border-color: var(--primary);
+      transform: scale(1.1);
+    }
+
+    /* Modal Visor (Lightbox Pro) */
     .modal {
       display: none;
       position: fixed;
+      inset: 0;
       z-index: 1000;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.92);
+      background: rgba(5, 8, 15, 0.95);
+      backdrop-filter: blur(25px);
       justify-content: center;
       align-items: center;
-      padding: 1rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
 
-    .modal-content {
-      max-width: 90%;
-      max-height: 85vh;
-      border-radius: 8px;
+    .modal.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-viewport {
+      position: relative;
+      max-width: 90vw;
+      max-height: 82vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-img {
+      max-width: 90vw;
+      max-height: 82vh;
       object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+      transition: transform 0.2s ease;
     }
 
-    .close-btn {
+    /* Controles flotantes dentro del modal */
+    .modal-controls {
       position: absolute;
       top: 20px;
-      right: 30px;
-      color: #fff;
-      font-size: 2.5rem;
-      font-weight: bold;
-      cursor: pointer;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 1010;
     }
 
-    footer {
+    .modal-bottom-bar {
+      position: absolute;
+      bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      padding: 10px 20px;
+      border-radius: 30px;
+      z-index: 1010;
+    }
+
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1005;
+      transition: all 0.2s ease;
+    }
+
+    .nav-arrow:hover {
+      background: var(--primary);
+      color: #090d16;
+    }
+
+    .nav-prev { left: 25px; }
+    .nav-next { right: 25px; }
+
+    /* Animaciones */
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.6); }
+      100% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-container {
       text-align: center;
-      margin-top: 4rem;
-      color: #64748b;
-      font-size: 0.9rem;
+      padding: 5rem 1rem;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(56, 189, 248, 0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
 
+  <!-- Fondo interactivo con partículas -->
+  <canvas id="bgCanvas"></canvas>
+  <div class="ambient-glow" id="ambientGlow"></div>
+
+  <!-- Encabezado -->
   <header>
+    <div class="brand-pill">
+      <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+      Centro Galería ELOHIM
+    </div>
     <h1>Galería de Fotos</h1>
-    <p>Carga automática desde GitHub</p>
   </header>
 
-  <!-- Contenedor donde se cargan las fotos dinámicamente -->
-  <main class="gallery-grid" id="galleryContainer">
-    <div class="status-msg">Cargando imágenes...</div>
-  </main>
+  <!-- Barra de Herramientas Flotante -->
+  <div class="toolbar-wrapper">
+    <div class="toolbar">
+      <!-- Selector de carpeta -->
+      <div class="tool-group">
+        <div class="folder-input-wrapper">
+          <i data-lucide="folder" style="width: 16px; height: 16px; color: var(--primary);"></i>
+          <input type="text" id="folderInput" value="29092026">
+          <button class="btn-icon" onclick="cargarGaleria()" title="Cargar carpeta">
+            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+          </button>
+        </div>
+      </div>
 
-  <!-- Modal para ver la foto a pantalla completa -->
-  <div id="imageModal" class="modal" onclick="closeModal()">
-    <span class="close-btn">&times;</span>
-    <img class="modal-content" id="modalImg">
+      <!-- Modos de Fondo Ambiental -->
+      <div class="tool-group">
+        <button class="btn-icon" onclick="cambiarFondo('cosmic')" title="Fondo Cósmico">
+          <i data-lucide="moon" style="width: 16px; height: 16px;"></i>
+        </button>
+        <button class="btn-icon" onclick="cambiarFondo('neon')" title="Fondo Neón">
+          <i data-lucide="zap" style="width: 16px; height: 16px;"></i>
+        </button>
+        <button class="btn-icon" onclick="cambiarFondo('sunset')" title="Fondo Sunset">
+          <i data-lucide="sun" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+
+      <!-- Descarga Masiva -->
+      <div class="tool-group">
+        <button class="btn-primary-action" id="downloadSelectedBtn" onclick="descargarSeleccionadasZip()" style="display: none;">
+          <i data-lucide="download-cloud" style="width: 18px; height: 18px;"></i>
+          Descargar ZIP (<span id="selectedCount">0</span>)
+        </button>
+      </div>
+    </div>
   </div>
 
-  <footer>
-    <p>&copy; Alojado en GitHub Pages</p>
-  </footer>
+  <!-- Galería Principal -->
+  <main class="gallery-container">
+    <div class="gallery-grid" id="galleryContainer">
+      <div class="status-container">
+        <div class="spinner"></div>
+        <p>Cargando fotografías desde GitHub...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Visor Modal Pro (Lightbox) -->
+  <div class="modal" id="imageModal">
+    <div class="modal-controls">
+      <button class="btn-icon" onclick="rotarImagen()" title="Rotar">
+        <i data-lucide="rotate-cw"></i>
+      </button>
+      <button class="btn-icon" onclick="descargarImagenActual()" title="Descargar foto">
+        <i data-lucide="download"></i>
+      </button>
+      <button class="btn-icon" onclick="cerrarModal()" title="Cerrar (Esc)">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <button class="nav-arrow nav-prev" onclick="cambiarFotoModal(-1)">
+      <i data-lucide="chevron-left"></i>
+    </button>
+    
+    <div class="modal-viewport">
+      <img src="" alt="Foto" class="modal-img" id="modalImg">
+    </div>
+
+    <button class="nav-arrow nav-next" onclick="cambiarFotoModal(1)">
+      <i data-lucide="chevron-right"></i>
+    </button>
+
+    <div class="modal-bottom-bar">
+      <span id="modalIndexText" style="font-size: 0.85rem; font-weight: 600;">1 de 10</span>
+    </div>
+  </div>
+
+  <!-- Avatar Interactivo ELOHIM Bot -->
+  <div class="avatar-widget">
+    <div class="avatar-speech" id="avatarSpeech">
+      ¡Hola! Puedes seleccionar varias fotos para descargarlas juntas en un archivo ZIP.
+    </div>
+    <div class="avatar-btn" onclick="interactuarAvatar()">
+      <div class="avatar-core">
+        <i data-lucide="bot" style="color: #090d16; width: 22px; height: 22px;"></i>
+      </div>
+    </div>
+  </div>
 
   <script>
-    // =========================================================
-    // CONFIGURACIÓN:
-    // =========================================================
-    const usuarioGitHub = 'DesarrolloInfantilTemprano-DIT';
-    const repositorio   = 'ELOHIM';
-    const carpetaImg    = '29092026';
+    // Configuración general
+    const config = {
+      usuario: 'DesarrolloInfantilTemprano-DIT',
+      repositorio: 'ELOHIM',
+      carpeta: '29092026'
+    };
 
-    const container = document.getElementById('galleryContainer');
-    const apiUrl = `https://api.github.com/repos/${usuarioGitHub}/${repositorio}/contents/${carpetaImg}`;
+    let listaFotos = [];
+    let seleccionados = new Set();
+    let indexFotoActual = 0;
+    let anguloRotacion = 0;
 
-    // Obtener las fotos desde la API de GitHub
-    fetch(apiUrl)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('No se pudo acceder a la carpeta de imágenes.');
-        }
-        return response.json();
-      })
-      .then(files => {
-        container.innerHTML = ''; // Limpiar mensaje de carga
+    // Inicialización al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initParticles();
+      cargarGaleria();
+    });
 
-        // Extensiones válidas de imagen
-        const extensiones = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    // 1. Carga de fotografías desde la API de GitHub
+    async function cargarGaleria() {
+      const folderName = document.getElementById('folderInput').value.trim() || config.carpeta;
+      config.carpeta = folderName;
+
+      const container = document.getElementById('galleryContainer');
+      container.innerHTML = `
+        <div class="status-container">
+          <div class="spinner"></div>
+          <p>Conectando con la carpeta '${folderName}'...</p>
+        </div>
+      `;
+
+      seleccionados.clear();
+      actualizarBotonDescarga();
+
+      const apiUrl = `https://api.github.com/repos/${config.usuario}/${config.repositorio}/contents/${folderName}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('No se encontró la carpeta especificada');
         
-        const fotos = files.filter(file => 
-          extensiones.some(ext => file.name.toLowerCase().endsWith(ext))
-        );
+        const files = await response.json();
+        const exts = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+        
+        listaFotos = files.filter(f => exts.some(ext => f.name.toLowerCase().endsWith(ext)));
 
-        if (fotos.length === 0) {
-          container.innerHTML = '<div class="status-msg">No hay imágenes en la carpeta img/</div>';
+        if (listaFotos.length === 0) {
+          container.innerHTML = `
+            <div class="status-container">
+              <i data-lucide="image-off" style="width: 48px; height: 48px; margin-bottom: 1rem; color: #64748b;"></i>
+              <p>No se encontraron fotografías en la carpeta <strong>'${folderName}'</strong>.</p>
+            </div>
+          `;
+          lucide.createIcons();
           return;
         }
 
-        // Crear tarjeta por cada imagen encontrada
-        fotos.forEach(foto => {
-          const card = document.createElement('div');
-          card.className = 'gallery-card';
-          card.onclick = () => openModal(foto.download_url);
+        renderizarGaleria();
+        hablarAvatar(`Se cargaron ${listaFotos.length} fotos exitosamente.`);
 
-          const img = document.createElement('img');
-          img.src = foto.download_url;
-          img.alt = foto.name;
-          img.loading = 'lazy';
+      } catch (err) {
+        container.innerHTML = `
+          <div class="status-container">
+            <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 1rem; color: #ef4444;"></i>
+            <p>Error al conectar. Verifica que la carpeta <strong>'${folderName}'</strong> exista en GitHub.</p>
+          </div>
+        `;
+        lucide.createIcons();
+      }
+    }
 
-          card.appendChild(img);
-          container.appendChild(card);
+    // 2. Renderizado limpio sin nombres de texto
+    function renderizarGaleria() {
+      const container = document.getElementById('galleryContainer');
+      container.innerHTML = '';
+
+      listaFotos.forEach((foto, idx) => {
+        const card = document.createElement('div');
+        card.className = `gallery-card ${seleccionados.has(idx) ? 'selected' : ''}`;
+        
+        card.innerHTML = `
+          <div class="select-checkbox" onclick="toggleSeleccion(event, ${idx})">
+            <i data-lucide="check" style="width: 16px; height: 16px; display: ${seleccionados.has(idx) ? 'block' : 'none'}"></i>
+          </div>
+          <img src="${foto.download_url}" alt="Fotografía" loading="lazy">
+          <div class="card-actions">
+            <button class="btn-quick-download" onclick="descargarFotoDirecta(event, '${foto.download_url}')" title="Descargar foto">
+              <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+            </button>
+          </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+          if (!e.target.closest('.select-checkbox') && !e.target.closest('.card-actions')) {
+            abrirModal(idx);
+          }
         });
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        container.innerHTML = '<div class="status-msg">Error al cargar las fotos. Revisa los nombres de tu usuario y repositorio.</div>';
+
+        container.appendChild(card);
       });
 
-    // Funciones del visor modal (lightbox)
-    function openModal(imageSrc) {
+      lucide.createIcons();
+    }
+
+    // 3. Gestión de Selección Múltiple
+    function toggleSeleccion(event, idx) {
+      event.stopPropagation();
+      if (seleccionados.has(idx)) {
+        seleccionados.delete(idx);
+      } else {
+        seleccionados.add(idx);
+      }
+      actualizarBotonDescarga();
+      renderizarGaleria();
+    }
+
+    function actualizarBotonDescarga() {
+      const btn = document.getElementById('downloadSelectedBtn');
+      const countSpan = document.getElementById('selectedCount');
+      countSpan.innerText = seleccionados.size;
+
+      if (seleccionados.size > 0) {
+        btn.style.display = 'inline-flex';
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+
+    // 4. Descarga en ZIP
+    async function descargarSeleccionadasZip() {
+      if (seleccionados.size === 0) return;
+
+      hablarAvatar('Generando paquete ZIP...');
+      const zip = new JSZip();
+      const folder = zip.folder("Fotos");
+
+      let procesados = 0;
+      const total = seleccionados.size;
+
+      for (let idx of seleccionados) {
+        const foto = listaFotos[idx];
+        try {
+          const resp = await fetch(foto.download_url);
+          const blob = await resp.blob();
+          folder.file(foto.name, blob);
+          procesados++;
+        } catch (e) {
+          console.error("Error al descargar foto para ZIP:", e);
+        }
+      }
+
+      zip.generateAsync({ type: "blob" }).then((content) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(content);
+        a.download = `Galeria_${config.carpeta}_Fotos.zip`;
+        a.click();
+        hablarAvatar('¡Descarga iniciada con éxito!');
+      });
+    }
+
+    // 5. Descarga de imagen individual
+    async function descargarFotoDirecta(event, url) {
+      if (event) event.stopPropagation();
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'Fotografia.jpg';
+        a.click();
+      } catch (err) {
+        window.open(url, '_blank');
+      }
+    }
+
+    // 6. Visor Modal Lightbox
+    function abrirModal(idx) {
+      indexFotoActual = idx;
+      anguloRotacion = 0;
       const modal = document.getElementById('imageModal');
-      const modalImg = document.getElementById('modalImg');
-      modal.style.display = 'flex';
-      modalImg.src = imageSrc;
+      const img = document.getElementById('modalImg');
+      
+      img.style.transform = `rotate(0deg)`;
+      img.src = listaFotos[indexFotoActual].download_url;
+      
+      document.getElementById('modalIndexText').innerText = `${indexFotoActual + 1} de ${listaFotos.length}`;
+      modal.classList.add('active');
     }
 
-    function closeModal() {
-      document.getElementById('imageModal').style.display = 'none';
+    function cerrarModal() {
+      document.getElementById('imageModal').classList.remove('active');
     }
 
+    function cambiarFotoModal(direccion) {
+      indexFotoActual = (indexFotoActual + direccion + listaFotos.length) % listaFotos.length;
+      abrirModal(indexFotoActual);
+    }
+
+    function rotarImagen() {
+      anguloRotacion = (anguloRotacion + 90) % 360;
+      document.getElementById('modalImg').style.transform = `rotate(${anguloRotacion}deg)`;
+    }
+
+    function descargarImagenActual() {
+      descargarFotoDirecta(null, listaFotos[indexFotoActual].download_url);
+    }
+
+    // Teclas de acceso rápido
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModal();
+      const modal = document.getElementById('imageModal');
+      if (!modal.classList.contains('active')) return;
+      if (e.key === 'Escape') cerrarModal();
+      if (e.key === 'ArrowLeft') cambiarFotoModal(-1);
+      if (e.key === 'ArrowRight') cambiarFotoModal(1);
     });
-  </script>
 
+    // 7. Fondos dinámicos e interactivos
+    function cambiarFondo(tema) {
+      const glow = document.getElementById('ambientGlow');
+      if (tema === 'cosmic') {
+        glow.style.background = 'radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(129, 140, 248, 0.08) 50%, transparent 70%)';
+      } else if (tema === 'neon') {
+        glow.style.background = 'radial-gradient(circle, rgba(236, 72, 153, 0.18) 0%, rgba(139, 92, 246, 0.12) 50%, transparent 70%)';
+      } else if (tema === 'sunset') {
+        glow.style.background = 'radial-gradient(circle, rgba(249, 115, 22, 0.18) 0%, rgba(234, 179, 8, 0.1) 50%, transparent 70%)';
+      }
+    }
+
+    // 8. Sistema de Partículas para Fondo en Canvas
+    function initParticles() {
+      const canvas = document.getElementById('bgCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      const particles = Array.from({ length: 45 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: Math.random() * 1.5 + 0.5,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        alpha: Math.random() * 0.5 + 0.2
+      }));
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+
+          if (p.x < 0) p.x = width;
+          if (p.x > width) p.x = 0;
+          if (p.y < 0) p.y = height;
+          if (p.y > height) p.y = 0;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+          ctx.fill();
+        });
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    }
+
+    // 9. Asistente Avatar ELOHIM
+    function hablarAvatar(mensaje) {
+      const speech = document.getElementById('avatarSpeech');
+      speech.innerText = mensaje;
+      speech.style.display = 'block';
+      setTimeout(() => {
+        speech.style.display = 'none';
+      }, 4000);
+    }
+
+    function interactuarAvatar() {
+      const frases = [
+        "Puedes cambiar de carpeta introduciendo su nombre en la barra superior.",
+        "Haz clic en el icono del check sobre cualquier foto para seleccionarla y bajar un paquete ZIP.",
+        "Abre cualquier imagen para verla en pantalla completa con opciones de rotación.",
+        "Usa las teclas de flecha en tu teclado para navegar entre las fotos dentro del visor."
+      ];
+      const azar = frases[Math.floor(Math.random() * frases.length)];
+      hablarAvatar(azar);
+    }
+  </script>
 </body>
 </html>
